@@ -3,43 +3,45 @@
  */
 class Particle
 {
-    constructor (particleID = 0, startX = 500, startY = 180, dir = 0, enemySRC = null, enemyOffSet = {X: 0, Y: 0}, image = null)
+    constructor (particleID = 0, startX = 500, startY = 180, dir = 0, enemySRC = -1, enemyOffSet = {X: 0, Y: 0}, image = null, life = 7)
     {
         // Sprite init
         this.particleID  = particleID;
         this._x          = startX;
         this._y          = startY;
         this._dir        = dir;
-        this.enemySRC    = enemySRC;
+        this._enemySRC    = enemySRC;
         this.enemyOffSet = enemyOffSet;
         this.speed       = 0;
+        this.life        = life;
 
         this.img         = image;
-
+        this.img         = new Image();
         switch ( this.particleID )
         {
             case 0:
-                this.img = new Image('pulse.png');
+                this.img.src = 'pulse.png';
                 this.speed = 8;
                 break;
 
             case 1:
-                this.img = new Image('seeker.png');
+                this.img.src = 'seeker.png';
                 this.speed = 13;
                 break;
 
             case 2:
-                this.img = new Image('spreadshot.png');
+                this.img.src = 'spreadshot.png';
                 this.speed = 8;
                 break;
 
             case 3:
-                this.img = new Image('barrier.png');
+                this.img.src = 'barrier.png';
                 this.speed = 0;
                 break;
 
             default:
                 this.img = null;
+                console.log("Error-type particle: " + this.particleID);
                 break;
         }
     }
@@ -53,6 +55,8 @@ class Particle
     /** Retrieves this particle's currently faced direction in radians. */
     get dir () { return this._dir; }
 
+    get enemySRC() { return this._enemySRC; }
+
     /** Sets this particle's current sprite location in the x coordinate plane. */
     set x (newX) { this._x = newX; }
 
@@ -62,9 +66,13 @@ class Particle
     /** Sets this particle's currently faced direction in radians. */
     set dir (newDir) { this._dir = newDir; }
 
+    set enemySRC(newSRC) { this._enemySRC = newSRC; }
+
     /**
      *  Moves the particle along its path (towards the player, straight or tracking an enemy).
+     *  TODO: Fix collision logic.
      *  @param canvas - The 2D HTML5 canvas this particle is located spatially.
+     *  @returns true if this particle is alive, otherwise returns false.
      */
     updateFrame ( timing, canvas, playerX, playerY )
     {
@@ -76,10 +84,14 @@ class Particle
                 if ( !this.collideX(this._x, playerX) )
                     this._x = this._x + (( this._x > playerX ) ? -1 * this.speed : this.speed);
                 if ( !this.collideY(this._y, playerY) )
-                    this._y = this._y + (( this._y < playerY ) ? -1 * this.speed : this.speed);
+                    this._y = this._y + (( this._y > playerY ) ? -1 * this.speed : this.speed);
                     
                 // Face player
                 this._dir = this.updateDir(playerX, playerY);
+
+                // Update life
+                if ( this.life > 0 && timing % 60 == 0) this.life--;
+                else if ( this.life <= 0 ) return false;
 
                 break;
 
@@ -96,6 +108,10 @@ class Particle
                 // Face player
                 this._dir = this.updateDir(playerX, playerY);
 
+                // Update life
+                if ( this.life > 0 && timing % 60 == 0) this.life--;
+                else if ( this.life <= 0 ) return false;
+
                 break;
 
             // Pointy projectile; moves in dir until it reaches a wall
@@ -111,8 +127,10 @@ class Particle
             // Oop
             default:
                 console.log("Error-type particle movement: " + this.particleID);
-                break;
+                return false;
+                //break;
         }
+        return true;
     }
 
     /**
@@ -191,7 +209,8 @@ class Particle
     draw (context)
     {
         if ( this.img == null ) console.log("AAAAAAAAAAAAAAAAAAAA");
-        context.drawImage( this.img, this.x, this.y, 20, 20);
+        //console.log(this.img + " " + this.x + " " + this.y);
+        context.drawImage( this.img, this.x, this.y, 20, 20 );
         /*// Draws different particle shapes based on ID
         switch ( this.particleID )
         {

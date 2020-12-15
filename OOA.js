@@ -2,6 +2,7 @@
 var canvas, ctx, timing, level, score, lives, keys, player, enemy, enemies, particles, gameover, startGame;
 var lastCollision, spawned, first, enemySize;
 var audio, playAudio, hitAudio, damageAudio;
+var ID_COUNT;
 
 //var background = new Image();
 //background.src = 'background.png';
@@ -16,6 +17,7 @@ function main()
     canvas      = document.getElementById('canvas1');
     ctx         = canvas.getContext('2d');
     timing      = 0;
+    ID_COUNT    = 0;
 
     player      = new Player
                         ( 
@@ -107,7 +109,7 @@ function main()
         }
     }
 
-    window.onclick = () => { playAudio = true; startGame = true; first = false;}
+    document.getElementById('canvas1').onclick = () => { playAudio = true; startGame = true; first = false;}
 
     // Start game render loop
     update();
@@ -171,7 +173,8 @@ function update()
                 tmpX = Math.floor(Math.random() * canvas.width  - 20) + 10;
                 tmpY = Math.floor(Math.random() * canvas.height - 20) + 10;
 
-                enemies.push(new Enemy(0, tmpX, tmpY, enemySize, enemySize, 0));
+                enemies.push(new Enemy(0, tmpX, tmpY, enemySize, enemySize, 0, ID_COUNT));
+                ID_COUNT++;
                 if ( playAudio )
                 {
                     var aud = new Audio('sTeleport.mp3');
@@ -204,7 +207,9 @@ function update()
                 tmpY = Math.floor(Math.random() * canvas.height - 20) + 10;
 
 
-                enemies.push(new Enemy(0, tmpX, tmpY, enemySize, enemySize, 0));
+                enemies.push(new Enemy(0, tmpX, tmpY, enemySize, enemySize, 0, ID_COUNT));
+                ID_COUNT++;
+                
                 if ( playAudio )
                 {
                     var audi = new Audio('sTeleport.mp3');
@@ -224,7 +229,9 @@ function update()
                 tmpY = Math.floor(Math.random() * canvas.height - 20) + 10;
 
 
-                enemies.push(new Enemy(1, tmpX, tmpY, enemySize, enemySize, 0));
+                enemies.push(new Enemy(1, tmpX, tmpY, enemySize, enemySize, 0, ID_COUNT));
+                ID_COUNT++;
+
                 if ( playAudio )
                 {
                     var audioo = new Audio('sTeleport.mp3');
@@ -268,13 +275,8 @@ function update()
 
             break;
         
-        // Level 11: 
-        case 11:
 
-            break;
-        
-
-        default: // Over 11
+        default: // Over 10
             console.log("Wow. Beat the game, huh? Nice.");
             break;
     }
@@ -338,64 +340,87 @@ function update()
         }
         else player.updateFrame(player.actionSet.STAND);
 
-        // Handle enemy movement
+        // Handle enemy movement & new particles
         for ( var j = 0; j < enemies.length; j++ )
         {
             if ( enemies[j].updateFrame(timing, canvas, player.x, player.y) )
             {
                 var parts = enemies[j].fire();
-                if ( parts != null)
+                if ( parts != null && parts.length > 0 )
                 {
                     for (var k = 0; k < parts.length; k++)
                     {
                         particles.push(parts[k]);
-                        // Add particle firing audio here
                     }
                 }
             }
         }
 
-        // Handle particle movement
-        for ( var k = 0; k < particles.length; k++)
+        // Handle particle movement (deletes particle if its lifetime ends)
+        for ( var l = 0; l < particles.length; l++)
         {
-            particles[k].updateFrame(timing, canvas, player.x, player.y);
+            if ( !particles[l].updateFrame(timing, canvas, player.x + 40, player.y + 40) )
+            {
+                particles.splice(l, 1);
+                audioObj = new Audio('particle_destroy.mp3'); 
+                audioObj.play();
+            }
         }
         
         // Check for collisions with particles & enemies, if so damage enemy and remove particle
         for ( var i = 0; i < particles.length; i++ )
         {
-            // Check if particle i collided with any of the other particles
-            if ( collision(particles[i].x, particles[i].y, particles[i].width, i) )
+            // Find this particle's enemy source
+            var enemySource = 0;
+            for ( var q = 0; q < enemies.length; q++)
+            {
+                if ( particles[i].enemySRC == enemies[q] )
+                {
+                    enemySource = i;
+                    break;
+                }
+            }
+
+            // Check if particle i collided with any of the enemies
+            if ( collisionE(particles[i].x, particles[i].y, 20, enemySize, enemySource) )
             {
                 score += Math.round(level / 2);
+                var audioObj;
 
                 // Sound effect - The file is already loaded, the new object just lets you play it in parallel
                 if ( playAudio )
                 {
-                    var audioObj = new Audio('hit.mp3'); 
+                    audioObj = new Audio('hit.mp3'); 
                     audioObj.play();
-                }                
+                }
 
                 // Check the position of the collisions to make sure the correct element is removed
                 if ( lastCollision > i )
                 {
                     particles.splice(i, 1);
-                    particles.splice(lastCollision - 1, 1);
+                    if ( enemies[lastCollision].damage() )
+                        enemies.splice(lastCollision/* - 1*/, 1);
+
+                    //audioObj = new Audio('particle_destroy.mp3'); 
+                    //audioObj.play();
                 }
                 else 
                 {
-                    particles.splice(lastCollision, 1);
-                    particles.splice(i - 1, 1);
+                    if ( enemies[lastCollision].damage() )
+                        enemies.splice(lastCollision/* - 1*/, 1);
+                    particles.splice(i/* - 1*/, 1);
+                    //audioObj = new Audio('particle_destroy.mp3'); 
+                    //audioObj.play();
                 }
                 
                 // Change the index so all particles are checked
-                i -= 2;
+                i -= 1;
                 if ( i < 0 ) i = 0;
             }
         }
 
         // Check for collisions with character, if so reduce health
-        if ( collision(player.x, player.y, 40) )
+        if ( collision(player.x + 40, player.y + 40, 40, 20) )
         {
             lives--;
             particles.splice(lastCollision, 1);
@@ -493,18 +518,44 @@ function draw()
  *  @param y_pos - The y position of the object to check.
  *  @param width - The width of the object to check.
  */
-function collision(x_pos, y_pos, width, ignoreNum = -1, isImg = false)
+function collision(x_pos, y_pos, width, thisWidth = width, ignoreNum = -1, isImg = false)
 {
     for (var i = 0; i < particles.length; i++)
     {
         if 
         ( 
-            ((x_pos + width / 2) > (particles[i].x - particles[i].width / 2) && (x_pos + width / 2) < (particles[i].x + particles[i].width / 2)) && // x dir
-            ((y_pos + width / 2) > (particles[i].y - particles[i].width / 2) && (y_pos + width / 2) < (particles[i].y + particles[i].width / 2)) && // y dir
-            (i != ignoreNum)
+            ((x_pos + width / 2) > (particles[i].x - thisWidth / 2) && (x_pos - width / 2) < (particles[i].x + thisWidth / 2)) && // x dir
+            ((y_pos + width / 2) > (particles[i].y - thisWidth / 2) && (y_pos - width / 2) < (particles[i].y + thisWidth / 2)) && // y dir
+            (i != ignoreNum) // Avoid colliding with self
         )
         {
             //console.log("Collided: " + i + ", X position: " + x_pos + " collided with " + particles[i].x + ", and Y position " + y_pos + " collided with " + particles[i].y + ".");
+            lastCollision = i;
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ *  Checks for collisions between the given object and the enemies.
+ *  @param x_pos - The x position of the object to check.
+ *  @param y_pos - The y position of the object to check.
+ *  @param width - The width of the object to check.
+ *  @param ignoreNum - The enemy to ignore.
+ */
+function collisionE(x_pos, y_pos, width, thisWidth = width, ignoreNum = -1, isImg = false)
+{
+    for (var i = 0; i < enemies.length; i++)
+    {
+        if 
+        ( 
+            ((x_pos + width / 2) > (enemies[i].x - thisWidth / 2) && (x_pos - width / 2) < (enemies[i].x + thisWidth / 2)) && // x dir
+            ((y_pos + width / 2) > (enemies[i].y - thisWidth / 2) && (y_pos - width / 2) < (enemies[i].y + thisWidth / 2)) && // y dir
+            (i != ignoreNum) // Avoid colliding with self
+        )
+        {
+            //console.log("Collided: " + i + ", X position: " + x_pos + " collided with " + enemies[i].x + ", and Y position " + y_pos + " collided with " + enemies[i].y + ".");
             lastCollision = i;
             return true;
         }

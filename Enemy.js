@@ -3,10 +3,11 @@
  */
 class Enemy
 {
-    constructor (enemyID = 0, startX = 500, startY = 180, width = 170, height = 170, dir = 0)
+    constructor (enemyID = 0, startX = 500, startY = 180, width = 170, height = 170, dir = 0, serialID = -1)
     {
         // Sprite init
         this.enemyID    = enemyID;
+        this._serialID  = serialID;
         this._x         = startX;
         this._y         = startY;
         this.spriteW    = width;
@@ -69,6 +70,8 @@ class Enemy
     /** Retrieves this enemy's current directions in radians. */
     get dir () { return this._dir; }
 
+    get serialID () { return this._serialID; }
+
     /** Sets this enemy's current sprite location in the x coordinate plane. */
     set x (newX) { this._x = newX; }
 
@@ -77,6 +80,17 @@ class Enemy
 
     /** Sets this enemy's current directions in radians. */
     set dir (newDir) {this._dir = newDir; }
+
+    set serialID (newID) { this._serialID = newID; }
+
+    /**
+     *  Returns true if enemy is still alive.
+     */
+    damage()
+    {
+        this.health--;
+        return ( this.health > 0 );
+    }
 
     /**
      *  Determines the behavior for each enemy as frames progress.
@@ -248,20 +262,22 @@ class Enemy
      */
     fire()
     {
-        var particle, offset;
+        var offset;
         var particlesArray = new Array();
         switch ( this.enemyID )
         {
             // Squarey (fires slow tracking projectile)
             case 0:
-                particle = new Particle(this.enemyID, this._x, this._y, this._dir);
-                particlesArray.push(particle);
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this));
+                var audio0 = new Audio("p1_fire_sound.mp3");
+                audio0.play();
                 break;
 
             // Circley (fires quick tracking projectile)
             case 1:
-                particle = new Particle(this.enemyID, this._x, this._y, this._dir, this);
-                particlesArray.push(particle);
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this));
+                var audio1 = new Audio("p2_fire_sound.mp3");
+                audio1.play();
                 break;
 
             // Pointy (fires line-bound spread)
@@ -270,8 +286,9 @@ class Enemy
 
                 // TODO: Calculate direction & offset for spread & create particles in for loop
 
-                particle = new Particle(this.enemyID, this._x, this._y, this._dir, this, offset);
-                particlesArray.push(particle);
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this, offset));
+                var audio2 = new Audio("p3_fire_sound.mp3");
+                audio2.play();
                 break;
 
             // Starey (fires projectiles that follow this enemy along the specified dir)
@@ -280,8 +297,9 @@ class Enemy
 
                 // TODO: Calculate direction & offset, avoid adding more particles if 
 
-                particle = new Particle(this.enemyID, this._x, this._y, this._dir, this, offset);
-                particlesArray.push(particle);
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this, offset));
+                var audio3 = new Audio("p3_fire_sound.mp3");
+                audio3.play();
                 break;
 
             // Oop
