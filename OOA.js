@@ -360,7 +360,7 @@ function update()
                 player.updateFrame(player.actionSet.STAND);
             }
         }
-        else player.updateFrame(player.actionSet.STAND);
+        else {player.updateFrame(player.actionSet.STAND);}
 
         // Handle enemy movement & new particles
         for ( var j = 0; j < enemies.length; j++ )
@@ -384,6 +384,8 @@ function update()
             if ( !particles[l].updateFrame(timing, canvas, player.x + 40, player.y + 40) )
             {
                 particles.splice(l, 1);
+		l--;
+		l = (l < 0) ? 0 : l;
                 audioObj = new Audio('particle_destroy.mp3'); 
                 audioObj.play();
             }
@@ -394,13 +396,14 @@ function update()
         {
             // Find this particle's enemy source and ignore collisions with it for the first second
             var enemySource = -1;
-            if ( particles[i].lifetime < 2 )
+	    //console.log("lifetime: " + particles[i].lifetime);	
+            if ( particles[i].lifetime <= 1 )
             {
                 for ( var q = 0; q < enemies.length; q++)
                 {
                     if ( particles[i].enemySRC == enemies[q].serialID )
                     {
-                        enemySource = i;
+                        enemySource = q;
                         break;
                     }
                 }

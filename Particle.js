@@ -14,7 +14,7 @@ class Particle
         this.enemyOffSet = enemyOffSet;
         this.speed       = 0;
         this.life        = life;
-        this.lifetime    = 0;
+        this._lifetime    = 0;
 
         this.img         = image;
         this.img         = new Image();
@@ -81,14 +81,17 @@ class Particle
      */
     updateFrame ( timing, canvas, playerX, playerY )
     {
+	//if (timing % 5 == 0)
+	//{
         switch ( this.particleID )
         {
             // Squarey projectile; tracks player loosely
             case 0:
+	    case 1:
                 // Move towards player
                 // Separate movement speed into x/y
-                var xDiff = this.speed;
-                var yDiff = this.speed;
+                var xDiff = Math.floor(this.speed / 2);
+                var yDiff = (xDiff != this.speed) ? this.speed - xDiff : 1;
 
                 // Adjusts movement direction towards player
                 if ( (playerX + 20) < this._x ) 
@@ -113,33 +116,19 @@ class Particle
                 this._dir = this.updateDir(playerX, playerY);
 
                 // Update life
-                if ( this.life > 0 && timing % 60 == 0) this.life--;
-                else if ( this.life <= 0 ) return false;
-
+		if ( timing % 60 == 0)
+		{
+		    this._lifetime++;
+                    if ( this.life > 0 ) this.life--;
+               	    else if ( this.life <= 0 ) return false;
+		}
                 break;
 
-            // Circley projectile; tracks player quickly
-            case 1:
-                // Move towards player
-                if ( this._dir == null ) console.log("???");
+            // Circley projectile; tracks player quickly (Merged with previous)
+            //case 1:
+                
 
-                if ( !this.collideX(this._x, playerX) )
-                    this._x = this._x + (( this._x > playerX ) ? -1 * this.speed : this.speed);
-                if ( !this.collideY(this._y, playerY) )
-                    this._y = this._y + (( this._y < playerY ) ? -1 * this.speed : this.speed);
-                    
-                // Face player
-                this._dir = this.updateDir(playerX, playerY);
-
-                // Update life
-                if( timing % 60 == 0 )
-                {
-                    this._lifetime++;
-                    if ( this.life > 1 ) this.life--;
-                    else return false;
-                }
-
-                break;
+                //break;
 
             // Pointy projectile; moves in dir until it reaches a wall
             case 2:
@@ -156,7 +145,8 @@ class Particle
                 console.log("Error-type particle movement: " + this.particleID);
                 return false;
                 //break;
-        }
+        //}
+	}
         return true;
     }
 
