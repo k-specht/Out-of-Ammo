@@ -86,10 +86,28 @@ class Particle
             // Squarey projectile; tracks player loosely
             case 0:
                 // Move towards player
-                if ( !this.collideX(this._x, playerX) )
-                    this._x = this._x + (( this._x > playerX ) ? -1 * this.speed : this.speed);
-                if ( !this.collideY(this._y, playerY) )
-                    this._y = this._y + (( this._y > playerY ) ? -1 * this.speed : this.speed);
+                // Separate movement speed into x/y
+                var xDiff = this.speed;
+                var yDiff = this.speed;
+
+                // Adjusts movement direction towards player
+                if ( (playerX + 20) < this._x ) 
+                    xDiff *= -1;
+                if ( (playerY + 20) < this._y ) 
+                    yDiff *= -1;
+
+                // Prevents vibrating objects by locking movement
+                if ( (playerX + 20) >= this._x - xDiff && (playerX + 20) <= this._x + xDiff )
+                    xDiff = 0;
+                if ( (playerY + 20) >= this._y - yDiff && (playerY + 20) <= this._y + yDiff )
+                    yDiff = 0;
+
+                this._x += xDiff;
+                this._y += yDiff;
+                //if ( !this.collideX(this._x, playerX) )
+                //    this._x = this._x + (( this._x > playerX ) ? (-1 * this.speed) : this.speed);
+                //if ( !this.collideY(this._y, playerY) )
+                //    this._y = this._y + (( this._y > playerY ) ? (-1 * this.speed) : this.speed);
                     
                 // Face player
                 this._dir = this.updateDir(playerX, playerY);

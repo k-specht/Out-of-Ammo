@@ -423,7 +423,7 @@ function update()
                 if ( lastCollision > i )
                 {
                     particles.splice(i, 1);
-                    if ( enemies[lastCollision].damage() )
+                    if ( !enemies[lastCollision].damage() )
                         enemies.splice(lastCollision/* - 1*/, 1);
 
                     //audioObj = new Audio('particle_destroy.mp3'); 
@@ -431,7 +431,7 @@ function update()
                 }
                 else 
                 {
-                    if ( enemies[lastCollision].damage() )
+                    if ( !enemies[lastCollision].damage() )
                         enemies.splice(lastCollision/* - 1*/, 1);
                     particles.splice(i/* - 1*/, 1);
                     //audioObj = new Audio('particle_destroy.mp3'); 
