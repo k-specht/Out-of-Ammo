@@ -14,6 +14,7 @@ class Particle
         this.enemyOffSet = enemyOffSet;
         this.speed       = 0;
         this.life        = life;
+        this.lifetime    = 0;
 
         this.img         = image;
         this.img         = new Image();
@@ -56,6 +57,10 @@ class Particle
     get dir () { return this._dir; }
 
     get enemySRC() { return this._enemySRC; }
+
+    get lifetime() { return this._lifetime; }
+
+    set lifetime(newLife) { this._lifetime = newLife; }
 
     /** Sets this particle's current sprite location in the x coordinate plane. */
     set x (newX) { this._x = newX; }
@@ -109,8 +114,12 @@ class Particle
                 this._dir = this.updateDir(playerX, playerY);
 
                 // Update life
-                if ( this.life > 0 && timing % 60 == 0) this.life--;
-                else if ( this.life <= 0 ) return false;
+                if( timing % 60 == 0 )
+                {
+                    this._lifetime++;
+                    if ( this.life > 1 ) this.life--;
+                    else return false;
+                }
 
                 break;
 

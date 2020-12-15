@@ -2,7 +2,7 @@
 var canvas, ctx, timing, level, score, lives, keys, player, enemy, enemies, particles, gameover, startGame;
 var lastCollision, spawned, first, enemySize;
 var audio, playAudio, hitAudio, damageAudio;
-var ID_COUNT;
+var ID_COUNT, levelText;
 
 //var background = new Image();
 //background.src = 'background.png';
@@ -18,6 +18,7 @@ function main()
     ctx         = canvas.getContext('2d');
     timing      = 0;
     ID_COUNT    = 0;
+    levelText   = '';
 
     player      = new Player
                         ( 
@@ -135,6 +136,16 @@ function update()
     else if ( !startGame )
     {
         // Pause
+        draw();
+
+        // Draw start icon on top
+        ctx.beginPath();
+        ctx.fillStyle = 'blue';
+        ctx.font = '24px Arial';
+        ctx.fillText(levelText, canvas.width / 2 - 200, canvas.height / 2);
+        ctx.fill();
+        ctx.closePath();
+
         requestAnimationFrame(update);
         return;
     }
@@ -185,14 +196,9 @@ function update()
             // If level has no more enemies (spawned or not) or particles, complete it
             else if ( enemies.length == 0 && spawned.Squarey == 2 && particles.length == 0 )
             {
-                // Draw start icon on top
-                ctx.beginPath();
-                ctx.fillStyle = 'blue';
-                ctx.font = '24px Arial';
-                ctx.fillText("Level 2: Be There or Be These", canvas.width / 2, canvas.height / 2);
-                ctx.fill();
-                ctx.closePath();
+                levelText = 'Level 2: Be There, or Be Them';
                 startGame = false;
+                level++;
             }
             break;
 
@@ -209,12 +215,20 @@ function update()
 
                 enemies.push(new Enemy(0, tmpX, tmpY, enemySize, enemySize, 0, ID_COUNT));
                 ID_COUNT++;
-                
+
                 if ( playAudio )
                 {
                     var audi = new Audio('sTeleport.mp3');
                     audi.play();
                 }
+            }
+
+            // If level has no more enemies (spawned or not) or particles, complete it
+            else if ( enemies.length == 0 && spawned.Squarey == 5 && particles.length == 0 )
+            {
+                levelText = 'Level 2: Be There, or Be Them';
+                startGame = false;
+                level++;
             }
             break;
 
@@ -237,6 +251,14 @@ function update()
                     var audioo = new Audio('sTeleport.mp3');
                     audioo.play();
                 }
+            }
+
+            // If level has no more enemies (spawned or not) or particles, complete it
+            else if ( enemies.length == 0 && spawned.Circley == 2 && particles.length == 0 )
+            {
+                levelText = 'Level 2: Be There, or Be Them';
+                startGame = false;
+                level++;
             }
             break;
 
@@ -370,14 +392,17 @@ function update()
         // Check for collisions with particles & enemies, if so damage enemy and remove particle
         for ( var i = 0; i < particles.length; i++ )
         {
-            // Find this particle's enemy source
-            var enemySource = 0;
-            for ( var q = 0; q < enemies.length; q++)
+            // Find this particle's enemy source and ignore collisions with it for the first second
+            var enemySource = -1;
+            if ( particles[i].lifetime < 2 )
             {
-                if ( particles[i].enemySRC == enemies[q] )
+                for ( var q = 0; q < enemies.length; q++)
                 {
-                    enemySource = i;
-                    break;
+                    if ( particles[i].enemySRC == enemies[q].serialID )
+                    {
+                        enemySource = i;
+                        break;
+                    }
                 }
             }
 

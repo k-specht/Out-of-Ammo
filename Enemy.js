@@ -268,14 +268,14 @@ class Enemy
         {
             // Squarey (fires slow tracking projectile)
             case 0:
-                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this));
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this._serialID));
                 var audio0 = new Audio("p1_fire_sound.mp3");
                 audio0.play();
                 break;
 
             // Circley (fires quick tracking projectile)
             case 1:
-                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this));
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this._serialID));
                 var audio1 = new Audio("p2_fire_sound.mp3");
                 audio1.play();
                 break;
@@ -286,7 +286,7 @@ class Enemy
 
                 // TODO: Calculate direction & offset for spread & create particles in for loop
 
-                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this, offset));
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this._serialID, offset));
                 var audio2 = new Audio("p3_fire_sound.mp3");
                 audio2.play();
                 break;
@@ -297,7 +297,7 @@ class Enemy
 
                 // TODO: Calculate direction & offset, avoid adding more particles if 
 
-                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this, offset));
+                particlesArray.push(new Particle(this.enemyID, this._x, this._y, this._dir, this._serialID, offset));
                 var audio3 = new Audio("p3_fire_sound.mp3");
                 audio3.play();
                 break;
